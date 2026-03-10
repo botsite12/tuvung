@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="https://xeno.onl/images/xeno.png">
+    <title>CUONG ENGLISH</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap');
+        :root { 
+            --primary: #00f2fe; --secondary: #4facfe; --success: #00b09b; --error: #ff0844;
+            --glass-bg: rgba(255, 255, 255, 0.08); --glass-border: rgba(255, 255, 255, 0.15);
+        }
+        * { box-sizing: border-box; font-family: 'Nunito', sans-serif; }
+        body { 
+            margin: 0; height: 100vh; color: #fff; 
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364); 
+            display: flex; flex-direction: column; overflow: hidden; 
+        }
+        .glass-panel { 
+            background: var(--glass-bg); backdrop-filter: blur(16px); 
+            border: 1px solid var(--glass-border); border-radius: 20px; 
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3); 
+        }
+        .screen { 
+            position: fixed; inset: 0; z-index: 100; 
+            display: flex; flex-direction: column; align-items: center; 
+            justify-content: center; padding: 20px; text-align: center; 
+            transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1); 
+        }
+        .hidden { transform: translateY(30px); opacity: 0; pointer-events: none; visibility: hidden; }
+        .auth-box { padding: 30px; width: 100%; max-width: 400px; }
+        input { 
+            width: 100%; padding: 14px; border-radius: 12px; border: 2px solid var(--glass-border); 
+            background: rgba(0,0,0,0.2); color: white; font-size: 1rem; margin-bottom: 15px; outline: none; 
+        }
+        input:focus { border-color: var(--primary); background: rgba(0,0,0,0.4); }
+        .btn { 
+            width: 100%; padding: 15px; border-radius: 50px; border: none; font-weight: 800; 
+            font-size: 1.1rem; cursor: pointer; color: white; transition: 0.3s; 
+            background: linear-gradient(to right, var(--primary), var(--secondary)); 
+        }
+        .top-bar { 
+            position: absolute; top: 20px; left: 20px; right: 20px; 
+            display: flex; justify-content: space-between; align-items: center; 
+            max-width: 800px; margin: 0 auto; z-index: 150; 
+        }
+        .grid-container { 
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); 
+            gap: 12px; width: 100%; max-width: 600px; margin-top: 20px; 
+            max-height: 60vh; overflow-y: auto; padding: 10px;
+        }
+        .card-btn { 
+            padding: 15px; border-radius: 12px; font-weight: 800; cursor: pointer; 
+            border: 1px solid var(--glass-border); background: rgba(255,255,255,0.05); color: white; 
+        }
+        .card-btn:hover { background: var(--primary); color: #000; }
+        .flashcard { width: 100%; max-width: 500px; padding: 40px; margin-bottom: 20px; font-size: 2rem; font-weight: 900; }
+        #admin-entry-btn { 
+            position: fixed; bottom: 20px; left: 20px; background: #a855f7; 
+            padding: 12px 20px; border-radius: 30px; font-weight: bold; cursor: pointer; 
+            display: none; z-index: 200; 
+        }
+        #toast { 
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%); 
+            background: #333; padding: 12px 30px; border-radius: 50px; 
+            opacity: 0; transition: 0.3s; z-index: 1000; border: 1px solid var(--primary); 
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+    <div id="toast">Thông báo</div>
+    <div id="admin-entry-btn" onclick="openAdminPanel()"><i class="fas fa-user-shield"></i> Admin Panel</div>
+
+    <div id="screen-auth" class="screen">
+        <h1 style="font-size: 2.5rem; margin-bottom: 0;">GLOBAL SUCCESS</h1>
+        <p style="opacity: 0.7; margin-bottom: 30px;">Học tiếng Anh THCS Hợp Đức</p>
+        <div id="login-box" class="auth-box glass-panel">
+            <h2 id="auth-title">ĐĂNG NHẬP</h2>
+            <div id="reg-fields" style="display: none;">
+                <input type="text" id="auth-name" placeholder="Tên của bạn...">
+            </div>
+            <input type="email" id="auth-email" placeholder="Email...">
+            <input type="password" id="auth-pass" placeholder="Mật khẩu...">
+            <button class="btn" onclick="handleAuth()">BẮT ĐẦU</button>
+            <p style="margin-top: 20px; cursor: pointer;" onclick="toggleAuthMode()">
+                <span id="auth-toggle-text">Chưa có tài khoản? <b>Đăng ký</b></span>
+            </p>
+        </div>
+    </div>
+
+    <div id="screen-grade" class="screen hidden">
+        <div class="top-bar">
+            <div id="user-display" class="glass-panel" style="padding: 5px 15px;">User</div>
+            <button class="btn" style="width: auto; padding: 5px 15px;" onclick="logout()">Thoát</button>
+        </div>
+        <h1>CHỌN KHỐI LỚP</h1>
+        <div class="grid-container">
+            <button class="card-btn glass-panel" onclick="showUnitSelect(6)">LỚP 6</button>
+            <button class="card-btn glass-panel" onclick="showUnitSelect(7)">LỚP 7</button>
+            <button class="card-btn glass-panel" onclick="showUnitSelect(8)">LỚP 8</button>
+            <button class="card-btn glass-panel" onclick="showUnitSelect(9)">LỚP 9</button>
+        </div>
+    </div>
+
+    <div id="screen-unit" class="screen hidden">
+        <h2 id="unit-title">CHỌN UNIT</h2>
+        <div id="unit-grid" class="grid-container"></div>
+        <button class="btn" style="max-width: 200px; margin-top: 20px; background: #444;" onclick="showScreen('screen-grade')">QUAY LẠI</button>
+    </div>
+
+    <div id="screen-game" class="screen hidden" style="justify-content: flex-start; padding-top: 80px;">
+        <div id="game-info" style="margin-bottom: 10px; font-weight: bold; color: var(--primary);">Unit Name</div>
+        <div class="flashcard glass-panel" id="word-vn">Nghĩa</div>
+        <div style="width: 100%; max-width: 500px;">
+            <input type="text" id="game-input" placeholder="Dịch sang tiếng Anh..." autocomplete="off">
+            <div id="feedback" style="margin-bottom: 10px; font-weight: bold;"></div>
+            <button id="btn-check" class="btn" onclick="checkAnswer()">NỘP BÀI</button>
+            <button id="btn-next" class="btn hidden" style="background: #f59e0b;" onclick="nextWord()">CÂU TIẾP ➜</button>
+        </div>
+        <div style="margin-top: 20px;">ĐIỂM: <span id="game-score" style="color: #ffd700; font-size: 1.5rem;">0</span></div>
+    </div>
+
+    <div id="screen-admin" class="screen hidden" style="background: #111;">
+        <h2>QUẢN TRỊ ĐIỂM SỐ</h2>
+        <div class="glass-panel" style="width: 100%; max-width: 800px; overflow-x: auto;">
+            <table style="width: 100%; text-align: left; border-collapse: collapse;">
+                <thead style="background: var(--secondary); color: #000;">
+                    <tr><th style="padding: 10px;">Email</th><th>Bài học</th><th>Điểm</th><th>Ngày</th></tr>
+                </thead>
+                <tbody id="admin-table-body"></tbody>
+            </table>
+        </div>
+        <button class="btn" style="max-width: 200px; margin-top: 20px;" onclick="showScreen('screen-grade')">ĐÓNG</button>
+    </div>
+
+    <script>
+        // --- KHO DỮ LIỆU TỪ VỰNG GLOBAL SUCCESS (ĐẦY ĐỦ 12 UNIT/LỚP) ---
+        const VOCAB = {
+            6: {
+                1: [{w:"activity", m:"hoạt động"}, {w:"creative", m:"sáng tạo"}, {w:"uniform", m:"đồng phục"}],
+                2: [{w:"apartment", m:"căn hộ"}, {w:"furniture", m:"đồ đạc"}, {w:"cupboard", m:"tủ ly"}],
+                3: [{w:"clever", m:"thông minh"}, {w:"kind", m:"tốt bụng"}, {w:"patient", m:"kiên nhẫn"}],
+                4: [{w:"cathedral", m:"nhà thờ"}, {w:"narrow", m:"hẹp"}, {w:"noisy", m:"ồn ào"}],
+                5: [{w:"desert", m:"sa mạc"}, {w:"mountain", m:"núi"}, {w:"wonder", m:"kỳ quan"}],
+                6: [{w:"celebrate", m:"ăn mừng"}, {w:"firework", m:"pháo hoa"}, {w:"luck", m:"sự may mắn"}],
+                7: [{w:"channel", m:"kênh truyền hình"}, {w:"comedy", m:"hài kịch"}, {w:"educational", m:"có tính giáo dục"}],
+                8: [{w:"karate", m:"võ karate"}, {w:"stadium", m:"sân vận động"}, {w:"equipment", m:"thiết bị"}],
+                9: [{w:"continent", m:"lục địa"}, {w:"landmark", m:"địa danh"}, {w:"palace", m:"cung điện"}],
+                10: [{w:"wireless", m:"không dây"}, {w:"robot", m:"người máy"}, {w:"automatic", m:"tự động"}],
+                11: [{w:"environment", m:"môi trường"}, {w:"recycle", m:"tái chế"}, {w:"pollution", m:"ô nhiễm"}],
+                12: [{w:"guard", m:"canh gác"}, {w:"recognise", m:"nhận ra"}, {w:"understand", m:"hiểu"}]
+            },
+            7: {
+                1: [{w:"hobby", m:"sở thích"}, {w:"benefit", m:"lợi ích"}, {w:"unusual", m:"lạ thường"}],
+                2: [{w:"calories", m:"calo"}, {w:"sunburn", m:"cháy nắng"}, {w:"vitamin", m:"vitamin"}],
+                3: [{w:"community", m:"cộng đồng"}, {w:"volunteer", m:"tình nguyện viên"}, {w:"donate", m:"quyên góp"}],
+                4: [{w:"composer", m:"nhà soạn nhạc"}, {w:"instrument", m:"nhạc cụ"}, {w:"puppet", m:"con rối"}],
+                5: [{w:"fragrant", m:"thơm"}, {w:"sauce", m:"nước sốt"}, {w:"turmeric", m:"nghệ"}],
+                6: [{w:"academic", m:"học thuật"}, {w:"locate", m:"xác định vị trí"}, {w:"temple", m:"đền thờ"}],
+                7: [{w:"commuter", m:"người đi vé tháng"}, {w:"pavement", m:"vỉa hè"}, {w:"vehicle", m:"xe cộ"}],
+                8: [{w:"documentary", m:"phim tài liệu"}, {w:"gripping", m:"hấp dẫn"}, {w:"hilarious", m:"vui nhộn"}],
+                9: [{w:"carnival", m:"lễ hội hóa trang"}, {w:"feast", m:"bữa tiệc"}, {w:"parade", m:"diễu hành"}],
+                10: [{w:"biogas", m:"khí sinh học"}, {w:"renewable", m:"có thể tái tạo"}, {w:"source", m:"nguồn"}],
+                11: [{w:"driverless", m:"không người lái"}, {w:"flying car", m:"ô tô bay"}, {w:"teleport", m:"dịch chuyển tức thời"}],
+                12: [{w:"native", m:"bản ngữ"}, {w:"official", m:"chính thức"}, {w:"symbol", m:"biểu tượng"}]
+            },
+            8: {
+                1: [{w:"addicted", m:"bị nghiện"}, {w:"leisure", m:"thư giãn"}, {w:"virtual", m:"ảo"}],
+                2: [{w:"nomadic", m:"du mục"}, {w:"pasture", m:"đồng cỏ"}, {w:"vast", m:"rộng lớn"}],
+                3: [{w:"pressure", m:"áp lực"}, {w:"browse", m:"lướt web"}, {w:"upload", m:"tải lên"}],
+                4: [{w:"ethnic", m:"dân tộc"}, {w:"terraced field", m:"ruộng bậc thang"}, {w:"weaving", m:"dệt"}],
+                5: [{w:"costume", m:"trang phục"}, {w:"ornament", m:"đồ trang trí"}, {w:"ritual", m:"nghi lễ"}],
+                6: [{w:"curious", m:"tò mò"}, {w:"legend", m:"truyền thuyết"}, {w:"monster", m:"quái vật"}],
+                7: [{w:"aquatic", m:"dưới nước"}, {w:"dump", m:"vứt bỏ"}, {w:"radioactive", m:"phóng xạ"}],
+                8: [{w:"disaster", m:"thảm họa"}, {w:"erupt", m:"phun trào"}, {w:"rescue", m:"cứu hộ"}],
+                9: [{w:"shoppaholic", m:"người nghiện mua sắm"}, {w:"bargain", m:"mặc cả"}, {w:"voucher", m:"phiếu giảm giá"}],
+                10: [{w:"multimedia", m:"đa phương tiện"}, {w:"interact", m:"tương tác"}, {w:"holography", m:"hình ảnh 3D"}],
+                11: [{w:"astronomy", m:"thiên văn học"}, {w:"experiment", m:"thí nghiệm"}, {w:"invention", m:"phát minh"}],
+                12: [{w:"alien", m:"người ngoài hành tinh"}, {w:"galaxy", m:"thiên hà"}, {w:"spaceship", m:"tàu vũ trụ"}]
+            },
+            9: {
+                1: [{w:"artisan", m:"nghệ nhân"}, {w:"authentic", m:"đích thực"}, {w:"handicraft", m:"đồ thủ công"}],
+                2: [{w:"metropolitan", m:"thuộc đô thị"}, {w:"skyscraper", m:"nhà chọc trời"}, {w:"urban", m:"thành thị"}],
+                3: [{w:"cognitive", m:"nhận thức"}, {w:"frustrated", m:"thất vọng"}, {w:"stress", m:"căng thẳng"}],
+                4: [{w:"expectation", m:"sự kỳ vọng"}, {w:"illiterate", m:"mù chữ"}, {w:"seniority", m:"thâm niên"}],
+                5: [{w:"astounding", m:"đáng kinh ngạc"}, {w:"cavern", m:"hang động"}, {w:"fortress", m:"pháo đài"}],
+                6: [{w:"exhibition", m:"triển lãm"}, {w:"pedestrian", m:"người đi bộ"}, {w:"trolley", m:"xe điện"}],
+                7: [{w:"garnish", m:"trang trí món ăn"}, {w:"ingredient", m:"nguyên liệu"}, {w:"whisk", m:"đánh trứng"}],
+                8: [{w:"checkout", m:"quầy thanh toán"}, {w:"itinerary", m:"lịch trình"}, {w:"safari", m:"cuộc thám hiểm"}],
+                9: [{w:"bilingual", m:"song ngữ"}, {w:"dialect", m:"tiếng địa phương"}, {w:"fluent", m:"trôi chảy"}],
+                10: [{w:"aerospace", m:"hàng không vũ trụ"}, {w:"gravity", m:"trọng lực"}, {w:"mission", m:"nhiệm vụ"}],
+                11: [{w:"curriculum", m:"chương trình học"}, {w:"professional", m:"chuyên nghiệp"}, {w:"vocational", m:"thuộc nghề nghiệp"}],
+                12: [{w:"adapt", m:"thích nghi"}, {w:"overcrowding", m:"quá tải dân số"}, {w:"sustainable", m:"bền vững"}]
+            }
+        };
+
+        // --- BIẾN TOÀN CỤC ---
+        let isRegister = false;
+        let currentUser = null;
+        let gameData = { grade: 0, unit: 0, words: [], index: 0, score: 0 };
+
+        // --- CÁC HÀM XỬ LÝ ---
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        function toggleAuthMode() {
+            isRegister = !isRegister;
+            document.getElementById('auth-title').innerText = isRegister ? "ĐĂNG KÝ" : "ĐĂNG NHẬP";
+            document.getElementById('reg-fields').style.display = isRegister ? "block" : "none";
+            document.getElementById('auth-toggle-text').innerHTML = isRegister ? "Đã có tài khoản? <b>Đăng nhập</b>" : "Chưa có tài khoản? <b>Đăng ký</b>";
+        }
+
+        function handleAuth() {
+            const email = document.getElementById('auth-email').value.trim().toLowerCase();
+            const pass = document.getElementById('auth-pass').value.trim();
+            const name = document.getElementById('auth-name').value.trim();
+            let users = JSON.parse(localStorage.getItem('users')) || [];
+
+            if (!email || !pass) return alert("Điền đủ thông tin!");
+
+            if (isRegister) {
+                if (users.find(u => u.email === email)) return alert("Email đã có!");
+                users.push({ name: name || "User", email, pass });
+                localStorage.setItem('users', JSON.stringify(users));
+                alert("Đăng ký xong! Mời đăng nhập.");
+                toggleAuthMode();
+            } else {
+                const user = users.find(u => u.email === email && u.pass === pass);
+                if (user) {
+                    currentUser = user;
+                    localStorage.setItem('session', JSON.stringify(user));
+                    initApp();
+                } else alert("Sai thông tin!");
+            }
+        }
+
+        function initApp() {
+            document.getElementById('user-display').innerText = `Chào, ${currentUser.name}`;
+            document.getElementById('admin-entry-btn').style.display = (currentUser.email === 'ngquoccuong92@gmail.com') ? "block" : "none";
+            showScreen('screen-grade');
+        }
+
+        function showUnitSelect(grade) {
+            gameData.grade = grade;
+            const grid = document.getElementById('unit-grid');
+            grid.innerHTML = '';
+            Object.keys(VOCAB[grade]).forEach(u => {
+                const btn = document.createElement('button');
+                btn.className = 'card-btn glass-panel';
+                btn.innerText = `UNIT ${u}`;
+                btn.onclick = () => startLevel(grade, u);
+                grid.appendChild(btn);
+            });
+            showScreen('screen-unit');
+        }
+
+        function startLevel(grade, unit) {
+            gameData.unit = unit;
+            gameData.words = [...VOCAB[grade][unit]];
+            gameData.index = 0;
+            gameData.score = 0;
+            document.getElementById('game-info').innerText = `LỚP ${grade} - UNIT ${unit}`;
+            showScreen('screen-game');
+            loadWord();
+        }
+
+        function loadWord() {
+            document.getElementById('word-vn').innerText = gameData.words[gameData.index].m;
+            document.getElementById('game-input').value = '';
+            document.getElementById('game-input').disabled = false;
+            document.getElementById('game-input').focus();
+            document.getElementById('feedback').innerText = '';
+            document.getElementById('btn-check').classList.remove('hidden');
+            document.getElementById('btn-next').classList.add('hidden');
+        }
+
+        function checkAnswer() {
+            const input = document.getElementById('game-input').value.trim().toLowerCase();
+            const correct = gameData.words[gameData.index].w.toLowerCase();
+            const feedback = document.getElementById('feedback');
+
+            if (input === correct) {
+                gameData.score += Math.round(100/gameData.words.length);
+                feedback.innerText = "Chính xác! ✅"; feedback.style.color = "var(--success)";
+            } else {
+                feedback.innerText = `Sai rồi! Đáp án: ${correct} ❌`; feedback.style.color = "var(--error)";
+            }
+            document.getElementById('game-score').innerText = gameData.score;
+            document.getElementById('game-input').disabled = true;
+            document.getElementById('btn-check').classList.add('hidden');
+            document.getElementById('btn-next').classList.remove('hidden');
+        }
+
+        function nextWord() {
+            gameData.index++;
+            if (gameData.index < gameData.words.length) loadWord();
+            else {
+                saveResult();
+                alert(`Xong! Điểm: ${gameData.score}`);
+                showScreen('screen-grade');
+            }
+        }
+
+        function saveResult() {
+            const history = JSON.parse(localStorage.getItem('history')) || [];
+            history.push({ user: currentUser.email, lesson: `Lớp ${gameData.grade}-U${gameData.unit}`, score: gameData.score, time: new Date().toLocaleDateString() });
+            localStorage.setItem('history', JSON.stringify(history));
+        }
+
+        function openAdminPanel() {
+            const history = JSON.parse(localStorage.getItem('history')) || [];
+            const tbody = document.getElementById('admin-table-body');
+            tbody.innerHTML = history.reverse().map(h => `<tr><td style="padding:10px;">${h.user}</td><td>${h.lesson}</td><td>${h.score}</td><td>${h.time}</td></tr>`).join('');
+            showScreen('screen-admin');
+        }
+
+        function logout() { localStorage.removeItem('session'); location.reload(); }
+
+        // Khởi động
+        const saved = localStorage.getItem('session');
+        if (saved) { currentUser = JSON.parse(saved); initApp(); }
+        
+        // Bắt sự kiện phím Enter
+        document.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const gameScreen = !document.getElementById('screen-game').classList.contains('hidden');
+                if (gameScreen) {
+                    if (!document.getElementById('btn-check').classList.contains('hidden')) checkAnswer();
+                    else if (!document.getElementById('btn-next').classList.contains('hidden')) nextWord();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
